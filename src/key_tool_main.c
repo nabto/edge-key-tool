@@ -33,6 +33,8 @@ struct args {
     const char* stringInput;
 };
 
+static void print_key_info(const char* privateKey);
+
 static bool parse_args(int argc, char** argv, struct args* args)
 {
     const char x1s[]  = "h";      const char* x1l[]  = { "help", 0 };
@@ -62,7 +64,7 @@ static bool parse_args(int argc, char** argv, struct args* args)
     }
 
     if (!gopt_arg(options, OPTION_OUTPUT_FORMAT, &args->outputFormat)) {
-        args->outputFormat = "pem";
+        args->outputFormat = "none";
     }
 
     if (gopt_arg(options, OPTION_INPUT, &args->input)) {
@@ -104,8 +106,9 @@ static void print_help()
         "to write the output into." NEWLINE NEWLINE);
 
     printf(" -h, --help           Print help" NEWLINE);
+    printf(" -t, --text           Print text version of the private key in both raw, pem and the fingerprint in hex" NEWLINE);
     printf(" -o, --output         File to write output to. If not specified output is written to stdout" NEWLINE);
-    printf("     --output-format  Output format (default: 'pem'). Valid options: 'pem', 'raw', 'fingerprint', 'cert'" NEWLINE);
+    printf("     --output-format  Output format (default: 'none'). Valid options: 'none', 'pem', 'raw', 'fingerprint', 'cert'" NEWLINE);
     printf(" -i, --input          File to read private key from. Not required when generating new key" NEWLINE);
     printf(" -s, --string-input   Provide input directly from command line." NEWLINE);
     printf(
@@ -142,6 +145,7 @@ int main(int argc, char** argv)
             free(inputKey);
             return 1;
         }
+        print_key_info(inputKey);
 
     } else if(args.input == NULL && args.stringInput == NULL) {
         printf("Input format '%s' requires input from file or from command line to be provided" NEWLINE, args.inputFormat);
@@ -239,6 +243,8 @@ int main(int argc, char** argv)
         }
         memcpy(outputString, cert, strlen(cert));
         free(cert);
+    } else if (strcmp(args.outputFormat, "none") == 0) {
+
     } else {
         printf("Invalid output format '%s'" NEWLINE, args.outputFormat);
         print_help();
@@ -247,30 +253,79 @@ int main(int argc, char** argv)
     }
     free(inputKey);
 
-    // Present the output string as specified
-    if (args.output != NULL) {
-        // output file provided. Write to file
-        printf(
-            "Private key from input format '%s' successfully converted to "
-            "format '%s'" NEWLINE,
-            args.inputFormat, args.outputFormat);
-        if (!string_file_save(args.output, outputString)) {
-            printf("Failed to save output to file!" NEWLINE);
-            return 1;
-        } else {
-            printf("Output successfully written to file %s" NEWLINE,
-                   args.output);
+    if (strcmp(args.outputFormat, "none") != 0)
+    {
+        // Present the output string as specified
+        if (args.output != NULL)
+        {
+            // output file provided. Write to file
+            printf(
+                "Private key from input format '%s' successfully converted to "
+                "format '%s'" NEWLINE,
+                args.inputFormat, args.outputFormat);
+            if (!string_file_save(args.output, outputString))
+            {
+                printf("Failed to save output to file!" NEWLINE);
+                return 1;
+            }
+            else
+            {
+                printf("Output successfully written to file %s" NEWLINE,
+                       args.output);
+                return 0;
+            }
+        }
+        else
+        {
+            // no output file provided. Write to stdout
+            printf(
+                "Private key from input format '%s' successfully converted to "
+                "format '%s'" NEWLINE,
+                args.inputFormat, args.outputFormat);
+            printf("Resulting output:" NEWLINE);
+            printf("%s" NEWLINE, outputString);
             return 0;
         }
+    }
+}
 
-    } else {
-        // no output file provided. Write to stdout
-        printf(
-            "Private key from input format '%s' successfully converted to "
-            "format '%s'" NEWLINE,
-            args.inputFormat, args.outputFormat);
-        printf("Resulting output:" NEWLINE);
+
+static void print_key_info(const char* privateKey)
+{
+    np_error_code ec;
+    {
+        printf("Pem encoded Private Key:" NEWLINE);
+
+        printf("%s" NEWLINE, privateKey);
+    }
+    {
+        printf("Raw encoded Private Key:" NEWLINE);
+        // Generate raw private key
+        uint8_t rawOut[33];
+        ec = nm_mbedtls_util_secp256r1_from_pem(privateKey, strlen(privateKey),
+                                                rawOut, 32);
+        if (ec != NABTO_EC_OK) {
+            printf("Failed to convert to raw key with: %s" NEWLINE, np_error_code_to_string(ec));
+            return;
+        }
+        char outputString[65];
+        memset(outputString, 0, 65);
+        np_data_to_hex(rawOut, 32, outputString);
+        printf("%s" NEWLINE NEWLINE, outputString);
+    }
+    {
+        printf("Fingerprint:" NEWLINE);
+        // Get fingerprint from private key
+        uint8_t fp[32];
+        ec =
+            nm_mbedtls_get_fingerprint_from_private_key(privateKey, fp);
+        if (ec != NABTO_EC_OK) {
+            printf("Failed get fingerprint from private key with: %s" NEWLINE, np_error_code_to_string(ec));
+            return;
+        }
+        char outputString[65];
+        memset(outputString, 0, 65);
+        np_data_to_hex(fp, 32, outputString);
         printf("%s" NEWLINE, outputString);
-        return 0;
     }
 }
