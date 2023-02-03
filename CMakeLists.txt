@@ -14,9 +14,13 @@ FetchContent_Declare(
   URL https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v3.3.0.tar.gz
 )
 
-FetchContent_MakeAvailable(mbedtls)
+FetchContent_GetProperties(mbedtls)
+if(NOT mbedtls_POPULATED)
+  FetchContent_Populate(mbedtls)
+  add_subdirectory(${mbedtls_SOURCE_DIR} ${mbedtls_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
 
-
+set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION .)
 include(InstallRequiredSystemLibraries)
 
 include(CheckIncludeFiles)
