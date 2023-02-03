@@ -8,9 +8,9 @@ on:
     types: [published]
 
 jobs:
-  build-windows:
+  build:
     timeout-minutes: 10
-    runs-on: windows-2022
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [windows-2022, macos-12, ubuntu-20.04]
@@ -55,7 +55,7 @@ jobs:
 
   release-assets:
     name: Release Assets
-    needs: [ build-windows, build-mac, build-linux ]
+    needs: [ build ]
     runs-on: ubuntu-22.04
     permissions:
       # allow the job to upload assets to the release
