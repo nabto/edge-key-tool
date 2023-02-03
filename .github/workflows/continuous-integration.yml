@@ -140,7 +140,7 @@ jobs:
 
   release-assets:
     name: Release Assets
-    needs: [ build, build-linux ]
+    needs: [ build-windows, build-mac, build-linux ]
     runs-on: ubuntu-22.04
     permissions:
       # allow the job to upload assets to the release
