@@ -1,7 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
 project(edge-key-tool)
 
+set(CMAKE_OSX_ARCHITECTURES arm64 x86_64)
+
 include(FetchContent)
+
+option(GEN_FILES "generate mbedtls files" OFF)
+option(ENABLE_TESTING "enable testing in mbedtls" OFF)
+option(ENABLE_PROGRAMS "enable building mbedtls programs" OFF)
 
 FetchContent_Declare(
   mbedtls
@@ -12,8 +18,6 @@ FetchContent_MakeAvailable(mbedtls)
 
 
 include(InstallRequiredSystemLibraries)
-
-set(CMAKE_OSX_ARCHITECTURES arm64 x86_64)
 
 include(CheckIncludeFiles)
 
