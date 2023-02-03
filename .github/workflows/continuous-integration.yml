@@ -9,6 +9,7 @@ on:
 
 jobs:
   build-windows:
+    timeout-minutes: 10
     runs-on: windows-2022
     strategy:
       matrix:
@@ -25,7 +26,8 @@ jobs:
           submodules: recursive
 
       - name: Generate mbedtls files
-        run: .\3rdparty\mbedtls\scripts\make_generated_files.bat
+        working-directory: 3rdparty/mbedtls
+        run: .\scripts\make_generated_files.bat
 
       - name: Configure cmake
         run: mkdir build && cd build && cmake -DGEN_FILES=0 -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/${{ matrix.installFolder }} ..
@@ -48,6 +50,7 @@ jobs:
           if-no-files-found: warn
 
   build-mac:
+    timeout-minutes: 10
     runs-on: macos-12
     strategy:
       matrix:
@@ -65,7 +68,8 @@ jobs:
           submodules: recursive
 
       - name: generate mbedtls files
-        run: ./3rdparty/mbedtls/tests/scripts/check-generated-files.sh -u
+        working-directory: 3rdparty/mbedtls
+        run: ./tests/scripts/check-generated-files.sh -u
 
       - name: Configure cmake
         run: mkdir build && cd build && cmake -DGEN_FILES=0 -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/${{ matrix.installFolder }} ..
@@ -89,6 +93,7 @@ jobs:
 
 
   build-linux:
+    timeout-minutes: 10
     # seperate build since it runs inside a container
     runs-on: ${{matrix.os}}
     container:
@@ -107,13 +112,14 @@ jobs:
 
     steps:
       - name: Install sw
-        run: apt-get update -y && apt-get install -y cmake build-essential git
+        run: apt-get update -y && apt-get install -y cmake build-essential git python3
       - uses: actions/checkout@v3
         with:
           submodules: recursive
 
       - name: generate mbedtls files
-        run: ./3rdparty/mbedtls/tests/scripts/check-generated-files.sh -u
+        working-directory: 3rdparty/mbedtls
+        run: ./tests/scripts/check-generated-files.sh -u
 
       - name: Configure cmake
         run: mkdir build && cd build && cmake -DGEN_FILES=0 -DCMAKE_INSTALL_PREFIX=`pwd`/../${{ matrix.installFolder }} ..
