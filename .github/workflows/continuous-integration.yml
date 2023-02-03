@@ -1,0 +1,121 @@
+name: Continuous Integration
+
+on:
+  push:
+  pull_request:
+    branches: [ master ]
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [windows-2022, macos-12]
+        include:
+          - os: windows-2022
+            installFolder: "edge-key-tool-windows_x86-64"
+            compression: "zip"
+            compressionCommand: "7z a"
+          - os: macos-12
+            installFolder: "edge-key-tool-macos-universal"
+            compression: "tar.gz"
+            compressionCommand: "tar -czf"
+
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure cmake
+        run: mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/${{ matrix.installFolder }} ..
+
+      - name: Build
+        run: cmake --build build --target install
+
+      - name: Test run
+        run: |
+          ${{ github.workspace }}/${{ matrix.installFolder }}/edge_key_tool --help
+
+      - name: Pack artifacts
+        run: ${{ matrix.compressionCommand }} ${{ github.workspace }}/${{ matrix.installFolder }}.${{ matrix.compression }} ${{ matrix.installFolder }}
+
+      - name: Upload artifacts
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: ${{ github.workspace }}/${{ matrix.installFolder }}.${{ matrix.compression }}
+          if-no-files-found: warn
+
+  build-linux:
+    # seperate build since it runs inside a container
+    runs-on: ${{matrix.os}}
+    container:
+      image: ubuntu:18.04
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        include:
+          - os: ubuntu-22.04
+            installFolder: "edge-key-tool-linux_x86-64"
+            compression: "tar.gz"
+            compressionCommand: "tar -czf"
+
+    # The runners working directory is ${{ github.workspace }} which is /home/runner/work/nabto-client-sdk-examples/
+    # Where as the docker runners homedir is /__w/nabto-client-sdk-examples/nabto-client-sdk-examples
+
+    steps:
+      - name: Install sw
+        run: apt-get update -y && apt-get install -y cmake build-essential git
+      - uses: actions/checkout@v3
+
+      - name: Configure cmake
+        run: mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=`pwd`/../${{ matrix.installFolder }} ..
+
+      - name: Build
+        run: cmake --build build --target install
+
+      - name: Test run
+        run: |
+          ./${{ matrix.installFolder }}/edge_key_tool --help
+
+      - name: Pack artifacts
+        run: ${{ matrix.compressionCommand }} ${{ matrix.installFolder }}.${{ matrix.compression }} ${{ matrix.installFolder }}
+
+      - name: list files
+        run: ls
+
+      - name: Upload artifacts
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: ${{ github.workspace }}/${{ matrix.installFolder }}.${{ matrix.compression }}
+          if-no-files-found: warn
+
+  release-assets:
+    name: Release Assets
+    needs: [ build build-linux ]
+    runs-on: ubuntu-22.04
+    permissions:
+      # allow the job to upload assets to the release
+      contents: write
+    strategy:
+      matrix:
+        binary: [edge-key-tool-windows_x86-64.zip, edge-key-tool-linux_x86-64.tar.gz, edge-key-tool-macos-universal.tar.gz]
+    if: github.event_name == 'release' && success()
+    steps:
+      - name:  download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: ./
+      - name: list files
+        run: ls -R
+      - name: Upload Source Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./artifact/${{matrix.binary}}
+          asset_name: ${{matrix.binary}}
+          asset_content_type: application/octet-stream
