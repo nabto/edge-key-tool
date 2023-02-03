@@ -8,29 +8,27 @@ on:
     types: [published]
 
 jobs:
-  build:
-    runs-on: ${{matrix.os}}
+  build-windows:
+    runs-on: windows-2022
     strategy:
       matrix:
-        os: [windows-2022, macos-12]
+        os: [windows-2022]
         include:
           - os: windows-2022
             installFolder: "edge-key-tool-windows_x86-64"
             compression: "zip"
             compressionCommand: "7z a"
-          - os: macos-12
-            installFolder: "edge-key-tool-macos-universal"
-            compression: "tar.gz"
-            compressionCommand: "tar -czf"
-
 
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
 
+      - name: Generate mbedtls files
+        run: .\3rdparty\mbedtls\scripts\make_generated_files.bat
+
       - name: Configure cmake
-        run: mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/${{ matrix.installFolder }} ..
+        run: mkdir build && cd build && cmake -DGEN_FILES=0 -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/${{ matrix.installFolder }} ..
 
       - name: Build
         run: cmake --build build --target install
@@ -49,11 +47,52 @@ jobs:
           path: ${{ github.workspace }}/${{ matrix.installFolder }}.${{ matrix.compression }}
           if-no-files-found: warn
 
+  build-mac:
+    runs-on: macos-12
+    strategy:
+      matrix:
+        os: [macos-12]
+        include:
+          - os: macos-12
+            installFolder: "edge-key-tool-macos-universal"
+            compression: "tar.gz"
+            compressionCommand: "tar -czf"
+
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: generate mbedtls files
+        run: ./3rdparty/mbedtls/tests/scripts/check-generated-files.sh -u
+
+      - name: Configure cmake
+        run: mkdir build && cd build && cmake -DGEN_FILES=0 -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/${{ matrix.installFolder }} ..
+
+      - name: Build
+        run: cmake --build build --target install
+
+      - name: Test run
+        run: |
+          ${{ github.workspace }}/${{ matrix.installFolder }}/edge_key_tool --help
+
+      - name: Pack artifacts
+        run: ${{ matrix.compressionCommand }} ${{ github.workspace }}/${{ matrix.installFolder }}.${{ matrix.compression }} ${{ matrix.installFolder }}
+
+      - name: Upload artifacts
+        if: ${{ success() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: ${{ github.workspace }}/${{ matrix.installFolder }}.${{ matrix.compression }}
+          if-no-files-found: warn
+
+
   build-linux:
     # seperate build since it runs inside a container
     runs-on: ${{matrix.os}}
     container:
-      image: ubuntu:18.04
+      image: ubuntu:20.04
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -73,8 +112,11 @@ jobs:
         with:
           submodules: recursive
 
+      - name: generate mbedtls files
+        run: ./3rdparty/mbedtls/tests/scripts/check-generated-files.sh -u
+
       - name: Configure cmake
-        run: mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=`pwd`/../${{ matrix.installFolder }} ..
+        run: mkdir build && cd build && cmake -DGEN_FILES=0 -DCMAKE_INSTALL_PREFIX=`pwd`/../${{ matrix.installFolder }} ..
 
       - name: Build
         run: cmake --build build --target install
