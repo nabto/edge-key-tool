@@ -1,6 +1,16 @@
 cmake_minimum_required(VERSION 3.10)
 project(edge-key-tool)
 
+include(FetchContent)
+
+FetchContent_Declare(
+  mbedtls
+  URL https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v3.3.0.tar.gz
+)
+
+FetchContent_MakeAvailable(mbedtls)
+
+
 include(InstallRequiredSystemLibraries)
 
 set(CMAKE_OSX_ARCHITECTURES arm64 x86_64)
@@ -18,7 +28,6 @@ if (HAVE_IO_H)
   add_definitions(-DHAVE_IO_H)
 endif()
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/mbedtls)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/gopt)
 
 set(src
