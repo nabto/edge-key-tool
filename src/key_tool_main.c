@@ -131,7 +131,7 @@ int main(int argc, char** argv)
     if (args.showHelp) {
         print_help();
         args_deinit(&args);
-        return 1;
+        return 0;
     }
 
     np_error_code ec;
