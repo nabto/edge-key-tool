@@ -26,6 +26,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
       - name: Configure cmake
         run: mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/${{ matrix.installFolder }} ..
@@ -68,6 +70,8 @@ jobs:
       - name: Install sw
         run: apt-get update -y && apt-get install -y cmake build-essential git
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
       - name: Configure cmake
         run: mkdir build && cd build && cmake -DCMAKE_INSTALL_PREFIX=`pwd`/../${{ matrix.installFolder }} ..
