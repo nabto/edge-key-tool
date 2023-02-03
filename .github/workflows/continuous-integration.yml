@@ -27,7 +27,9 @@ jobs:
 
       - name: Generate mbedtls files
         working-directory: 3rdparty/mbedtls
-        run: .\scripts\make_generated_files.bat
+        run: |
+          pip3 install jsonschema
+          .\scripts\make_generated_files.bat
 
       - name: Configure cmake
         run: mkdir build && cd build && cmake -DGEN_FILES=0 -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/${{ matrix.installFolder }} ..
@@ -69,7 +71,9 @@ jobs:
 
       - name: generate mbedtls files
         working-directory: 3rdparty/mbedtls
-        run: ./tests/scripts/check-generated-files.sh -u
+        run: |
+          pip3 install jsonschema
+          ./tests/scripts/check-generated-files.sh -u
 
       - name: Configure cmake
         run: mkdir build && cd build && cmake -DGEN_FILES=0 -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/${{ matrix.installFolder }} ..
@@ -112,14 +116,16 @@ jobs:
 
     steps:
       - name: Install sw
-        run: apt-get update -y && apt-get install -y cmake build-essential git python3
+        run: apt-get update -y && apt-get install -y cmake build-essential git python3 python3-pip
       - uses: actions/checkout@v3
         with:
           submodules: recursive
 
       - name: generate mbedtls files
         working-directory: 3rdparty/mbedtls
-        run: ./tests/scripts/check-generated-files.sh -u
+        run: |
+          pip3 install jsonschema
+          ./tests/scripts/check-generated-files.sh -u
 
       - name: Configure cmake
         run: mkdir build && cd build && cmake -DGEN_FILES=0 -DCMAKE_INSTALL_PREFIX=`pwd`/../${{ matrix.installFolder }} ..
