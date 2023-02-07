@@ -294,12 +294,12 @@ static void print_key_info(const char* privateKey)
 {
     np_error_code ec;
     {
-        printf("Pem encoded Private Key:" NEWLINE);
+        printf("PEM Private Key:" NEWLINE);
 
         printf("%s" NEWLINE, privateKey);
     }
     {
-        printf("Raw encoded Private Key:" NEWLINE);
+        printf("Raw Private Key:" NEWLINE);
         // Generate raw private key
         uint8_t rawOut[33];
         ec = nm_mbedtls_util_secp256r1_from_pem(privateKey, strlen(privateKey),
