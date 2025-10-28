@@ -23,8 +23,8 @@ set(GEN_FILES OFF CACHE BOOL "")
 FetchContent_MakeAvailable(mbedtls)
 
 # Disable warnings for mbedTLS targets based on compiler
-if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
-  # GCC/Clang: Disable documentation warnings
+if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+  # Clang/AppleClang: Disable documentation warnings
   if(TARGET mbedcrypto)
     target_compile_options(mbedcrypto PRIVATE -Wno-documentation -Wno-error=documentation)
   endif()
