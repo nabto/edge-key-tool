@@ -22,15 +22,29 @@ set(GEN_FILES OFF CACHE BOOL "")
 
 FetchContent_MakeAvailable(mbedtls)
 
-# Disable documentation warnings for mbedTLS targets
-if(TARGET mbedcrypto)
-  target_compile_options(mbedcrypto PRIVATE -Wno-documentation -Wno-error=documentation)
-endif()
-if(TARGET mbedtls)
-  target_compile_options(mbedtls PRIVATE -Wno-documentation -Wno-error=documentation)
-endif()
-if(TARGET mbedx509)
-  target_compile_options(mbedx509 PRIVATE -Wno-documentation -Wno-error=documentation)
+# Disable warnings for mbedTLS targets based on compiler
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+  # GCC/Clang: Disable documentation warnings
+  if(TARGET mbedcrypto)
+    target_compile_options(mbedcrypto PRIVATE -Wno-documentation -Wno-error=documentation)
+  endif()
+  if(TARGET mbedtls)
+    target_compile_options(mbedtls PRIVATE -Wno-documentation -Wno-error=documentation)
+  endif()
+  if(TARGET mbedx509)
+    target_compile_options(mbedx509 PRIVATE -Wno-documentation -Wno-error=documentation)
+  endif()
+elseif(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+  # MSVC: Disable warnings-as-errors and common problematic warnings
+  if(TARGET mbedcrypto)
+    target_compile_options(mbedcrypto PRIVATE /WX- /wd4244 /wd4267 /wd4996)
+  endif()
+  if(TARGET mbedtls)
+    target_compile_options(mbedtls PRIVATE /WX- /wd4244 /wd4267 /wd4996)
+  endif()
+  if(TARGET mbedx509)
+    target_compile_options(mbedx509 PRIVATE /WX- /wd4244 /wd4267 /wd4996)
+  endif()
 endif()
 
 set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION .)
