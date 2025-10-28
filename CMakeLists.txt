@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.28)
 project(edge-key-tool)
 
 set(CMAKE_OSX_ARCHITECTURES arm64 x86_64)
@@ -11,7 +11,7 @@ option(ENABLE_PROGRAMS "enable building mbedtls programs" OFF)
 
 FetchContent_Declare(
   mbedtls
-  URL https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v3.3.0.tar.gz
+  URL https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-3.6.5/mbedtls-3.6.5.tar.bz2
 )
 
 FetchContent_GetProperties(mbedtls)
