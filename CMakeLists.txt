@@ -12,12 +12,25 @@ option(ENABLE_PROGRAMS "enable building mbedtls programs" OFF)
 FetchContent_Declare(
   mbedtls
   URL https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/v3.3.0.tar.gz
+  DOWNLOAD_EXTRACT_TIMESTAMP true
 )
 
-FetchContent_GetProperties(mbedtls)
-if(NOT mbedtls_POPULATED)
-  FetchContent_Populate(mbedtls)
-  add_subdirectory(${mbedtls_SOURCE_DIR} ${mbedtls_BINARY_DIR} EXCLUDE_FROM_ALL)
+# Set mbedTLS options before making it available
+set(ENABLE_TESTING OFF CACHE BOOL "")
+set(ENABLE_PROGRAMS OFF CACHE BOOL "")
+set(GEN_FILES OFF CACHE BOOL "")
+
+FetchContent_MakeAvailable(mbedtls)
+
+# Disable documentation warnings for mbedTLS targets
+if(TARGET mbedcrypto)
+  target_compile_options(mbedcrypto PRIVATE -Wno-documentation -Wno-error=documentation)
+endif()
+if(TARGET mbedtls)
+  target_compile_options(mbedtls PRIVATE -Wno-documentation -Wno-error=documentation)
+endif()
+if(TARGET mbedx509)
+  target_compile_options(mbedx509 PRIVATE -Wno-documentation -Wno-error=documentation)
 endif()
 
 set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION .)
