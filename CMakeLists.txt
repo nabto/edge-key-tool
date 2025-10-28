@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.28)
 project(edge-key-tool)
 
 set(CMAKE_OSX_ARCHITECTURES arm64 x86_64)
