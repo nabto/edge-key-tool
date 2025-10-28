@@ -13,17 +13,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-2022, macos-12, ubuntu-20.04]
+        os: [windows-2022, macos-15, ubuntu-24.04]
         include:
           - os: windows-2022
             installFolder: "edge-key-tool-windows_x86-64"
             compression: "zip"
             compressionCommand: "7z a"
-          - os: macos-12
+          - os: macos-15
             installFolder: "edge-key-tool-macos-universal"
             compression: "tar.gz"
             compressionCommand: "tar -czf"
-          - os: ubuntu-20.04
+          - os: ubuntu-24.04
             installFolder: "edge-key-tool-linux_x86-64"
             compression: "tar.gz"
             compressionCommand: "tar -czf"
@@ -57,7 +57,7 @@ jobs:
   release-assets:
     name: Release Assets
     needs: [ build ]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       # allow the job to upload assets to the release
       contents: write
