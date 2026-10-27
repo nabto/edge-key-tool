@@ -11,7 +11,7 @@ option(ENABLE_PROGRAMS "enable building mbedtls programs" OFF)
 
 FetchContent_Declare(
   mbedtls
-  URL https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-3.6.5/mbedtls-3.6.5.tar.bz2
+  URL https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-3.6.7/mbedtls-3.6.7.tar.bz2
 )
 
 FetchContent_GetProperties(mbedtls)
